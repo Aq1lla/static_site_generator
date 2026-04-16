@@ -66,3 +66,25 @@ def extract_markdown_images(text):
         result.append((img_text[i], alt_text[i]))
     
     return result
+
+
+
+def extract_markdown_links(text):
+    """
+    Function that takes raw markdown text and returns a list of links. 
+    Each tuple should contain the anchor text and URL.
+
+    Example:
+    text = "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
+    print(extract_markdown_links(text))
+    # [("to boot dev", "https://www.boot.dev"), ("to youtube", "https://www.youtube.com/@bootdotdev")]
+    """
+    anchor_text = re.findall(r"\[(.*?)\]", text)
+    url_text = re.findall(r"\((.*?)\)", text)
+
+    result = []
+
+    for i in range(len(anchor_text)):
+        result.append((anchor_text[i], url_text[i]))
+    
+    return result

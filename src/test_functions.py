@@ -100,6 +100,28 @@ class TestTHTMLNode(unittest.TestCase):
         matches = extract_markdown_images("This text contains no markdown images.")
         self.assertListEqual([], matches)
 
+    def test_extract_markdown_links(self):
+        matches = extract_markdown_links(
+            "This is text with a link [to boot dev](https://www.boot.dev)"
+        )
+        self.assertListEqual([("to boot dev", "https://www.boot.dev")], matches)
+    
+    def test_extract_markdown_links_multiple(self):
+        matches = extract_markdown_links(
+           "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
+        )
+        self.assertListEqual(
+            [
+                ("to boot dev", "https://www.boot.dev"), 
+                ("to youtube", "https://www.youtube.com/@bootdotdev")
+            ],
+            matches,
+        )
+    
+    def test_extract_markdown_links_none(self):
+        matches = extract_markdown_links("This text contains no markdown images.")
+        self.assertListEqual([], matches)
+
 
 if __name__ == "__main__":
     unittest.main()
