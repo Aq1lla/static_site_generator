@@ -1,3 +1,5 @@
+import re
+
 from textnode import TextType, TextNode
 from htmlnode import LeafNode
 
@@ -41,3 +43,26 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
                 new_node.extend([TextNode(temp[i], text_type)])
     
     return new_node
+
+
+
+def extract_markdown_images(text):
+    """
+    Function that takes raw markdown text and returns a list of tuples. 
+    Each tuple should contain the alt text and the URL of any markdown images.
+
+    Example:
+    text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
+    print(extract_markdown_images(text))
+    # [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")]
+    """
+
+    img_text = re.findall(r"\[(.*?)\]", text)
+    alt_text = re.findall(r"\((.*?)\)", text)
+
+    result = []
+
+    for i in range(len(img_text)):
+        result.append((img_text[i], alt_text[i]))
+    
+    return result

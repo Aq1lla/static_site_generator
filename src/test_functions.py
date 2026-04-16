@@ -2,7 +2,7 @@ import unittest
 
 from htmlnode import HTMLNode, LeafNode, ParentNode
 from textnode import TextNode, TextType
-from functions import text_node_to_html_node, split_nodes_delimiter
+from functions import *
 
 
 class TestTHTMLNode(unittest.TestCase):
@@ -77,6 +77,29 @@ class TestTHTMLNode(unittest.TestCase):
         node = TextNode("On end `code block", TextType.TEXT)
         with self.assertRaisesRegex(Exception, r"^Invalid Markdown syntax - matching closing delimiter is not found\.$"):
             split_nodes_delimiter([node], "`", TextType.CODE)
+
+    def test_extract_markdown_images_single(self):
+        matches = extract_markdown_images(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)"
+        )
+        self.assertListEqual([("image", "https://i.imgur.com/zjjcJKZ.png")], matches)
+
+    def test_extract_markdown_images_multiple(self):
+        matches = extract_markdown_images(
+            "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
+        )
+        self.assertListEqual(
+            [
+                ("rick roll", "https://i.imgur.com/aKaOqIh.gif"),
+                ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg"),
+            ],
+            matches,
+        )
+
+    def test_extract_markdown_images_none(self):
+        matches = extract_markdown_images("This text contains no markdown images.")
+        self.assertListEqual([], matches)
+
 
 if __name__ == "__main__":
     unittest.main()
