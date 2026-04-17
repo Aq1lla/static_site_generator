@@ -4,6 +4,16 @@ from textnode import TextType, TextNode
 from htmlnode import LeafNode
 
 def text_node_to_html_node(text_node):
+    """
+    Function that handle each type of the TextType enum. If it gets a TextNode that is none of those types, it should raise an exception. Otherwise, it should return a new LeafNode object.
+
+    TextType.TEXT: This should return a LeafNode with no tag, just a raw text value.
+    TextType.BOLD: This should return a LeafNode with a "b" tag and the text
+    TextType.ITALIC: "i" tag, text
+    TextType.CODE: "code" tag, text
+    TextType.LINK: "a" tag, anchor text, and "href" prop
+    TextType.IMAGE: "img" tag, empty string value, "src" and "alt" props ("src" is the image URL, "alt" is the alt text)
+    """
     if text_node.text_type not in TextType:
         raise Exception("No such type")
 
@@ -57,13 +67,13 @@ def extract_markdown_images(text):
     # [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")]
     """
 
-    img_text = re.findall(r"\[(.*?)\]", text)
-    alt_text = re.findall(r"\((.*?)\)", text)
+    alt_text = re.findall(r"\[(.*?)\]", text)
+    url_text = re.findall(r"\((.*?)\)", text)
 
     result = []
 
-    for i in range(len(img_text)):
-        result.append((img_text[i], alt_text[i]))
+    for i in range(len(alt_text)):
+        result.append((alt_text[i], url_text[i]))
     
     return result
 
@@ -88,3 +98,106 @@ def extract_markdown_links(text):
         result.append((anchor_text[i], url_text[i]))
     
     return result
+
+
+
+def split_nodes_image(old_nodes):
+    """
+    Example:
+    node = TextNode(
+        "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)",
+        TextType.TEXT,
+    )
+    new_nodes = split_nodes_link([node])
+    # [
+    #     TextNode("This is text with a link ", TextType.TEXT),
+    #     TextNode("to boot dev", TextType.LINK, "https://www.boot.dev"),
+    #     TextNode(" and ", TextType.TEXT),
+    #     TextNode(
+    #         "to youtube", TextType.LINK, "https://www.youtube.com/@bootdotdev"
+    #     ),
+    # ]
+    """
+    new_node = []
+
+    for node in old_nodes:
+        
+        images = extract_markdown_images(node.text)
+
+        if len(images) == 0:
+            new_node.append(node)
+
+        check_text = node.text
+        check_imgs = 0
+
+        while check_imgs < len(images):
+            splits = check_text.split(f"![{images[check_imgs][0]}]({images[check_imgs][1]})", 1)
+
+            if splits[0] != "":
+                new_node.append(TextNode(splits[0], TextType.TEXT))
+
+            new_node.append(
+                TextNode(images[check_imgs][0], TextType.IMAGE, images[check_imgs][1])
+            )
+            check_text = splits[1]
+            check_imgs += 1
+
+        if len(images) > 0 and check_text != "":
+            new_node.append(TextNode(check_text, TextType.TEXT))
+   
+    return new_node
+
+
+
+def split_nodes_link(old_nodes):
+    new_node = []
+    
+    for node in old_nodes:
+        
+        links = extract_markdown_links(node.text)
+
+        if len(links) == 0:
+            new_node.append(node)
+
+        check_text = node.text
+        check_links = 0
+
+        while check_links < len(links):
+            splits = check_text.split(f"[{links[check_links][0]}]({links[check_links][1]})", 1)
+
+            if splits[0] != "":
+                new_node.append(TextNode(splits[0], TextType.TEXT))
+
+            new_node.append(
+                TextNode(links[check_links][0], TextType.LINK, links[check_links][1])
+            )
+            check_text = splits[1]
+            check_links += 1
+
+        if len(links) > 0 and check_text != "":
+            new_node.append(TextNode(check_text, TextType.TEXT))
+   
+    return new_node
+
+
+def text_to_textnodes(text):
+    """
+    Function that can convert a raw string of markdown-flavored text into a list of TextNode objects.
+
+    Example:
+    text = This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)
+    result = text_to_textnodes(text)
+    # [
+    #       TextNode("This is ", TextType.TEXT),
+    #       TextNode("text", TextType.BOLD),
+    #       TextNode(" with an ", TextType.TEXT),
+    #       TextNode("italic", TextType.ITALIC),
+    #       TextNode(" word and a ", TextType.TEXT),
+    #       TextNode("code block", TextType.CODE),
+    #       TextNode(" and an ", TextType.TEXT),
+    #       TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+    #       TextNode(" and a ", TextType.TEXT),
+    #       TextNode("link", TextType.LINK, "https://boot.dev"),
+    # ]
+    """
+    result = text_node_to_html_node(text)
