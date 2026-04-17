@@ -250,6 +250,65 @@ class TestTHTMLNode(unittest.TestCase):
             new_nodes,
         )
 
+    def test_text_to_textnodes_main(self):
+        text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+        result = text_to_textnodes(text)
+        self.assertListEqual(
+            [
+                TextNode("This is ", TextType.TEXT),
+                TextNode("text", TextType.BOLD),
+                TextNode(" with an ", TextType.TEXT),
+                TextNode("italic", TextType.ITALIC),
+                TextNode(" word and a ", TextType.TEXT),
+                TextNode("code block", TextType.CODE),
+                TextNode(" and an ", TextType.TEXT),
+                TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+                TextNode(" and a ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://boot.dev"),
+            ],
+            result,
+        )
+
+    def test_text_to_textnodes_plain_text_returns_original(self):
+        text = "Just plain text."
+        result = text_to_textnodes(text)
+        self.assertListEqual([TextNode("Just plain text.", TextType.TEXT)], result)
+
+    def test_text_to_textnodes_only_bold(self):
+        text = "**bold**"
+        result = text_to_textnodes(text)
+        self.assertListEqual([TextNode("bold", TextType.BOLD)], result)
+
+    def test_text_to_textnodes_image_at_start(self):
+        text = "![logo](https://example.com/logo.png) here"
+        result = text_to_textnodes(text)
+        self.assertListEqual(
+            [
+                TextNode("logo", TextType.IMAGE, "https://example.com/logo.png"),
+                TextNode(" here", TextType.TEXT),
+            ],
+            result,
+        )
+
+    def test_text_to_textnodes_code_and_link(self):
+        text = "Call `func()` and open [docs](https://example.com)."
+        result = text_to_textnodes(text)
+        self.assertListEqual(
+            [
+                TextNode("Call ", TextType.TEXT),
+                TextNode("func()", TextType.CODE),
+                TextNode(" and open ", TextType.TEXT),
+                TextNode("docs", TextType.LINK, "https://example.com"),
+                TextNode(".", TextType.TEXT),
+            ],
+            result,
+        )
+
+    def test_text_to_textnodes_unclosed_delimiter_raises_exception(self):
+        text = "This is **broken text"
+        with self.assertRaisesRegex(Exception, r"^Invalid Markdown syntax - matching closing delimiter is not found\.$"):
+            text_to_textnodes(text)
+
 
 if __name__ == "__main__":
     unittest.main()

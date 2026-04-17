@@ -38,7 +38,7 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
     for node in old_nodes:
         if node.text_type is not TextType.TEXT:
             new_node.extend([node])
-            break
+            continue
         
         temp = node.text.split(delimiter)
 
@@ -66,16 +66,7 @@ def extract_markdown_images(text):
     print(extract_markdown_images(text))
     # [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")]
     """
-
-    alt_text = re.findall(r"\[(.*?)\]", text)
-    url_text = re.findall(r"\((.*?)\)", text)
-
-    result = []
-
-    for i in range(len(alt_text)):
-        result.append((alt_text[i], url_text[i]))
-    
-    return result
+    return re.findall(r"!\[([^\]]*)\]\(([^)]+)\)", text)
 
 
 
@@ -89,15 +80,7 @@ def extract_markdown_links(text):
     print(extract_markdown_links(text))
     # [("to boot dev", "https://www.boot.dev"), ("to youtube", "https://www.youtube.com/@bootdotdev")]
     """
-    anchor_text = re.findall(r"\[(.*?)\]", text)
-    url_text = re.findall(r"\((.*?)\)", text)
-
-    result = []
-
-    for i in range(len(anchor_text)):
-        result.append((anchor_text[i], url_text[i]))
-    
-    return result
+    return re.findall(r"(?<!\!)\[([^\]]*)\]\(([^)]+)\)", text)
 
 
 
@@ -200,4 +183,13 @@ def text_to_textnodes(text):
     #       TextNode("link", TextType.LINK, "https://boot.dev"),
     # ]
     """
-    result = text_node_to_html_node(text)
+    result = [TextNode(text, TextType.TEXT)]
+    result = split_nodes_delimiter(result, "**", TextType.BOLD)
+    result = split_nodes_delimiter(result, "_", TextType.ITALIC)
+    result = split_nodes_delimiter(result, "`", TextType.CODE)
+    result = split_nodes_image(result)
+    result = split_nodes_link(result)
+
+
+    return result     
+    
