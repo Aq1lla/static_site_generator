@@ -310,5 +310,121 @@ class TestTHTMLNode(unittest.TestCase):
             text_to_textnodes(text)
 
 
+    def test_markdown_to_blocks(self):
+        md = """
+This is **bolded** paragraph
+
+This is another paragraph with _italic_ text and `code` here
+This is the same paragraph on a new line
+
+- This is a list
+- with items
+        """
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "This is **bolded** paragraph",
+                "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                "- This is a list\n- with items",
+            ],
+        )
+    
+    def test_markdown_to_blocks_multiline_n(self):
+        md = """
+This is **bolded** paragraph
+
+
+This is another paragraph with _italic_ text and `code` here
+This is the same paragraph on a new line
+
+
+
+
+- This is a list
+- with items
+        """
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "This is **bolded** paragraph",
+                "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                "- This is a list\n- with items",
+            ],
+        )
+
+    # Tests for block_to_block_type function
+    def test_block_to_block_type_heading_h1(self):
+        block = "# This is a heading"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.HEADING)
+
+    def test_block_to_block_type_heading_h2(self):
+        block = "## This is a heading"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.HEADING)
+
+    def test_block_to_block_type_heading_h6(self):
+        block = "###### This is a heading"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.HEADING)
+
+    def test_block_to_block_type_code(self):
+        block = "```\nprint('Hello')\nprint('World')\n```"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.CODE)
+
+    def test_block_to_block_type_quote_single_line(self):
+        block = "> This is a quote"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.QUOTE)
+
+    def test_block_to_block_type_quote_multiline(self):
+        block = "> This is a quote\n> with multiple lines\n> of content"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.QUOTE)
+
+    def test_block_to_block_type_unordered_list_single(self):
+        block = "- Item one"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.UL)
+
+    def test_block_to_block_type_unordered_list_multiple(self):
+        block = "- Item one\n- Item two\n- Item three"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.UL)
+
+    def test_block_to_block_type_ordered_list_single(self):
+        block = "1. Item one"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.OL)
+
+    def test_block_to_block_type_ordered_list_multiple(self):
+        block = "1. Item one\n2. Item two\n3. Item three"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.OL)
+
+    def test_block_to_block_type_paragraph_plain_text(self):
+        block = "This is a plain paragraph with no special formatting."
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.PARAGRAPH)
+
+    def test_block_to_block_type_paragraph_multiple_lines(self):
+        block = "This is a paragraph\nwith multiple lines\nbut no special formatting"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.PARAGRAPH)
+
+    def test_block_to_block_type_quote_mixed_not_quote(self):
+        block = "> This is a quote\nBut this line is not"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.PARAGRAPH)
+
+    def test_block_to_block_type_unordered_list_mixed_not_list(self):
+        block = "- Item one\nBut this line is not a list item"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.PARAGRAPH)
+
+
 if __name__ == "__main__":
     unittest.main()

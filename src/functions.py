@@ -1,6 +1,7 @@
 import re
 
 from textnode import TextType, TextNode
+from blocknode import BlockType
 from htmlnode import LeafNode
 
 def text_node_to_html_node(text_node):
@@ -193,3 +194,52 @@ def text_to_textnodes(text):
 
     return result     
     
+
+
+def markdown_to_blocks(markdown):
+    """
+    Function that takes a raw Markdown string (representing a full document) as input and returns a list of "block" strings
+    """
+
+    result = []
+
+    items = markdown.split("\n\n")
+
+    for item in items:
+        stripped = item.strip()
+        if stripped:
+            result.append(stripped)
+    
+    return result
+
+
+def block_to_block_type(markdown):
+    """
+    Function that takes a single block of markdown text as input and returns the BlockType representing the type of block 
+    it is.
+    """
+
+    if "#" in markdown[0:6]:
+        return BlockType.HEADING
+    elif markdown[0:4] == "```\n" and markdown[-3:] == "```":
+        return BlockType.CODE
+    elif markdown[0] == ">":
+        items = markdown.split("\n")
+        for item in items:
+            if item[0] != ">":
+                return BlockType.PARAGRAPH
+        return BlockType.QUOTE
+    elif markdown[:2] == "- ":
+        items = markdown.split("\n")
+        for item in items:
+            if not item.startswith("- "):
+                return BlockType.PARAGRAPH
+        return BlockType.UL
+    elif markdown[:3] == "1. ":
+        items = markdown.split("\n")
+        for i in range(len(items)):
+            if not items[i].startswith(f"{i+1}. "):
+                return BlockType.PARAGRAPH
+        return BlockType.OL
+    else:
+        return BlockType.PARAGRAPH
