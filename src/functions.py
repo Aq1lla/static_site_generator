@@ -2,7 +2,7 @@ import re
 
 from textnode import TextType, TextNode
 from blocknode import BlockType
-from htmlnode import LeafNode
+from htmlnode import *
 
 def text_node_to_html_node(text_node):
     """
@@ -243,3 +243,79 @@ def block_to_block_type(markdown):
         return BlockType.OL
     else:
         return BlockType.PARAGRAPH
+
+
+def text_to_children(text):
+    """
+    Function that takes a string of text and returns a list of HTMLNodes that represent the inline markdown using previously
+    created functions (think TextNode -> HTMLNode).
+    """
+
+    result = []
+
+    text_nodes = text_to_textnodes(text)
+
+    for node in text_nodes:
+        result.append(text_node_to_html_node(node))
+    
+    return result
+
+
+
+def markdown_to_html_node(markdown):
+    """
+    Function that converts a full markdown document into a single parent HTMLNode. That one parent HTMLNode should 
+    contain many child HTMLNode objects representing the nested elements.
+    """
+    result = []
+
+    # 1.- Split the markdown into blocks (you already have a function for this)
+    blocks = markdown_to_blocks(markdown)
+
+    # 2.- Loop over each block
+    for block in blocks:
+
+        # 3.- Determine the type of block (you already have a function for this)
+        type = block_to_block_type(block)
+
+        # 4.- Based on the type of block, create a new HTMLNode with the proper data
+        if type == BlockType.PARAGRAPH:
+            text = " ".join(block.split())
+            # 5.- Assign the proper child HTMLNode objects to the block node, using text_to_children function
+            html_node = ParentNode("p", text_to_children(text))
+        elif type == BlockType.HEADING:
+            level = len(block) - len(block.lstrip("#"))
+            text = block.lstrip("#").strip()
+            html_node = ParentNode(f"h{level}", text_to_children(text))
+        elif type == BlockType.CODE:
+            text = block[4:-3]
+            lines = text.split("\n")
+            text = "\n".join([line.lstrip() for line in lines])
+            # 6.- manually made a TextNode and used text_node_to_html_node.
+            text_node = TextNode(text, TextType.CODE)
+            code_node = text_node_to_html_node(text_node)
+            html_node = ParentNode("pre", [code_node])
+        elif type == BlockType.QUOTE:
+            lines = block.split("\n")
+            quote_text = " ".join([line.lstrip(">").strip() for line in lines])
+            html_node = ParentNode("blockquote", text_to_children(quote_text))
+        elif type == BlockType.UL:
+            items = block.split("\n")
+            li_children = []
+            for item in items:
+                text = item[2:]
+                li_children.append(ParentNode("li", text_to_children(text)))
+            html_node = ParentNode("ul", li_children)
+        elif type == BlockType.OL:
+            items = block.split("\n")
+            li_children = []
+            for item in items:
+                text = item.split(". ", 1)[1]
+                li_children.append(ParentNode("li", text_to_children(text)))
+            html_node = ParentNode("ol", li_children)
+
+        result.append(html_node)
+    
+    # 7.- Make all the block nodes children under a single parent HTML node (which should just be a div) and return it.
+    return ParentNode("div", result)
+

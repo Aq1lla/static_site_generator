@@ -425,6 +425,120 @@ This is the same paragraph on a new line
         result = block_to_block_type(block)
         self.assertEqual(result, BlockType.PARAGRAPH)
 
+    def test_paragraphs(self):
+        md = """
+    This is **bolded** paragraph
+    text in a p
+    tag here
+
+    This is another paragraph with _italic_ text and `code` here
+
+    """
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p></div>",
+        )
+
+    def test_codeblock(self):
+        md = """
+    ```
+    This is text that _should_ remain
+    the **same** even with inline stuff
+    ```
+    """
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
+        )
+
+    def test_heading_with_inline_markdown(self):
+        md = "# This is a **bold** heading"
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><h1>This is a <b>bold</b> heading</h1></div>",
+        )
+
+    def test_unordered_list_with_inline_markdown(self):
+        md = "- Item with **bold**\n- Item with _italic_\n- Plain item"
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ul><li>Item with <b>bold</b></li><li>Item with <i>italic</i></li><li>Plain item</li></ul></div>",
+        )
+
+    def test_ordered_list_with_inline_markdown(self):
+        md = "1. First with `code`\n2. Second with **bold**\n3. Third plain"
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ol><li>First with <code>code</code></li><li>Second with <b>bold</b></li><li>Third plain</li></ol></div>",
+        )
+
+    def test_quote_with_inline_markdown(self):
+        md = "> This is a **important** quote\n> with _multiple_ lines"
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><blockquote>This is a <b>important</b> quote with <i>multiple</i> lines</blockquote></div>",
+        )
+
+    def test_multiple_heading_levels(self):
+        md = "# Heading 1\n\n## Heading 2\n\n### Heading 3"
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><h1>Heading 1</h1><h2>Heading 2</h2><h3>Heading 3</h3></div>",
+        )
+
+    def test_single_item_list(self):
+        md = "- Only one item"
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ul><li>Only one item</li></ul></div>",
+        )
+
+    def test_quote_single_line(self):
+        md = "> A single line quote"
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><blockquote>A single line quote</blockquote></div>",
+        )
+
+    def test_mixed_blocks_all_types(self):
+        md = """# Main Title
+
+This is a paragraph with **bold** and _italic_ text.
+
+- List item one
+- List item two
+
+> A quote here
+
+1. Ordered first
+2. Ordered second"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertIn("<h1>Main Title</h1>", html)
+        self.assertIn("<p>This is a paragraph with <b>bold</b> and <i>italic</i> text.</p>", html)
+        self.assertIn("<ul><li>List item one</li><li>List item two</li></ul>", html)
+        self.assertIn("<blockquote>A quote here</blockquote>", html)
+        self.assertIn("<ol><li>Ordered first</li><li>Ordered second</li></ol>", html)
 
 if __name__ == "__main__":
     unittest.main()
