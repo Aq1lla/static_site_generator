@@ -1,7 +1,8 @@
 from textnode import *
+from main_functions import *
+
 
 def main():
-    html = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
-    print(html.__repr__())
+    init_page("./static", "./public")
 
 main()
